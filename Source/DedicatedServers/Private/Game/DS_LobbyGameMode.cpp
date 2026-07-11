@@ -48,7 +48,7 @@ void ADS_LobbyGameMode::CheckAndStopLobbyCountdown()
 	if (GetNumPlayers() - 1 < MinPlayers && LobbyStatus == ELobbyStatus::CountdownToSeamlessTravel)
 	{
 		//If player leaves the game and goes to lobby
-		//-1 indicates that player itself is leaving the game and we need to check if the remaining players are less than the minimum required players
+		//-1 indicates that player itself is leaving the game, and we need to check if the remaining players are less than the minimum required players
 		LobbyStatus = ELobbyStatus::WaitingForPlayers;
 		StopCountdownTimer(LobbyCountdownTimer);
 	}
