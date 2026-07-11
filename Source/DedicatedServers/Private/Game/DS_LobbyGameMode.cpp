@@ -1,16 +1,89 @@
 ﻿#include "Game/DS_LobbyGameMode.h"
 #include "Game/DS_GameInstanceSubsystem.h"
 #include "DedicatedServers/DedicatedServers.h"
+#include "Kismet/GameplayStatics.h"
 #if defined(WITH_GAMELIFT) && WITH_GAMELIFT
 #include "GameLiftServerSDK.h"
 #endif
 
+
+ADS_LobbyGameMode::ADS_LobbyGameMode()
+{
+	bUseSeamlessTravel = true;
+	LobbyStatus = ELobbyStatus::WaitingForPlayers;
+	MinPlayers = 1;			//To be changed for actual total no. of players
+	LobbyCountdownTimer.Type = ECountdownTimerType::LobbyCountdown;
+}
+
+void ADS_LobbyGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+	CheckAndStartLobbyCountdown();
+}
+
+void ADS_LobbyGameMode::InitSeamlessTravelPlayer(AController* NewController)
+{
+	Super::InitSeamlessTravelPlayer(NewController);
+	CheckAndStartLobbyCountdown();
+}
+
+void ADS_LobbyGameMode::Logout(AController* Exiting)
+{
+	Super::Logout(Exiting);
+	
+	CheckAndStopLobbyCountdown();
+}
+
+void ADS_LobbyGameMode::CheckAndStartLobbyCountdown()
+{
+	if (GetNumPlayers() >= MinPlayers && LobbyStatus == ELobbyStatus::WaitingForPlayers)
+	{
+		LobbyStatus = ELobbyStatus::CountdownToSeamlessTravel;
+		StartCountdownTimer(LobbyCountdownTimer);
+	}
+}
+
+void ADS_LobbyGameMode::CheckAndStopLobbyCountdown()
+{
+	if (GetNumPlayers() - 1 < MinPlayers && LobbyStatus == ELobbyStatus::CountdownToSeamlessTravel)
+	{
+		//If player leaves the game and goes to lobby
+		//-1 indicates that player itself is leaving the game and we need to check if the remaining players are less than the minimum required players
+		LobbyStatus = ELobbyStatus::WaitingForPlayers;
+		StopCountdownTimer(LobbyCountdownTimer);
+	}
+}
 
 void ADS_LobbyGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 	InitGameLift();
 }
+
+void ADS_LobbyGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
+{
+	Super::OnCountdownTimerFinished(Type);
+	
+	if (Type == ECountdownTimerType::LobbyCountdown)
+	{
+		LobbyStatus = ELobbyStatus::SeamlessTravelling;
+		
+		//Server Travel
+		const FString MapName = DestinationMap.ToSoftObjectPath().GetAssetName();
+		if (GIsEditor)
+		{
+			//To Play in Standalone Mode (In Editor)
+			UGameplayStatics::OpenLevelBySoftObjectPtr(this, DestinationMap);
+		}
+		else
+		{
+			//To play in any server -> Gamelift EC2 or Anywhere
+			GetWorld()->ServerTravel(MapName);
+		}
+	}
+}
+
+
 
 void ADS_LobbyGameMode::InitGameLift()
 {
