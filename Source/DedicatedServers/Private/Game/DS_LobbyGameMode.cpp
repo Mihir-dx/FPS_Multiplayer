@@ -67,23 +67,9 @@ void ADS_LobbyGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 	if (Type == ECountdownTimerType::LobbyCountdown)
 	{
 		LobbyStatus = ELobbyStatus::SeamlessTravelling;
-		
-		//Server Travel
-		const FString MapName = DestinationMap.ToSoftObjectPath().GetAssetName();
-		if (GIsEditor)
-		{
-			//To Play in Standalone Mode (In Editor)
-			UGameplayStatics::OpenLevelBySoftObjectPtr(this, DestinationMap);
-		}
-		else
-		{
-			//To play in any server -> Gamelift EC2 or Anywhere
-			GetWorld()->ServerTravel(MapName);
-		}
+		TrySeamlessTravel(DestinationMap);
 	}
 }
-
-
 
 void ADS_LobbyGameMode::InitGameLift()
 {
