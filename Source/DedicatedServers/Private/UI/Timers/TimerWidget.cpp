@@ -29,7 +29,7 @@ void UTimerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 void UTimerWidget::OnTimerUpdated(float CountdownTimeLeft, ECountdownTimerType Type)
 {
 	if (Type != TimerType) return;
-	if (bActive) TimerStarted(CountdownTimeLeft);
+	if (!bActive) TimerStarted(CountdownTimeLeft);
 	UpdateCountdown(CountdownTimeLeft);
 	K2_OnTimerUpdated(CountdownTimeLeft,TimerType);
 }
