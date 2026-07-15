@@ -47,6 +47,9 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Timer Updated"))
 	void K2_OnTimerUpdated(float Time, ECountdownTimerType Type);		//K2 is used to indicate Blueprint implementation for a C++ function.
 	
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Timer Started"))
+	void K2_OnTimerStarted(float Time, ECountdownTimerType Type);
+	
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Timer Stopped"))
 	void K2_OnTimerStopped(float Time, ECountdownTimerType Type);		//K2 is used to indicate Blueprint implementation for a C++ function.
 	
