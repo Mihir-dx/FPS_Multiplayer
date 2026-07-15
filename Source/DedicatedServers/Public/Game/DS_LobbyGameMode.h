@@ -50,4 +50,5 @@ private:
 #endif
 	
 	void InitGameLift();
+	void TryAcceptPlayerSession(const FString& PlayerSessionId, const FString& Username, FString& OutErrorMessage);
 };
