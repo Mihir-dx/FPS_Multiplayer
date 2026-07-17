@@ -20,12 +20,14 @@ void ADS_LobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 	CheckAndStartLobbyCountdown();
+	UE_LOG(LogTemp, Warning, TEXT("ADS_LobbyGameMode::PostLogin for %s"), *NewPlayer->GetName());
 }
 
 void ADS_LobbyGameMode::InitSeamlessTravelPlayer(AController* NewController)
 {
 	Super::InitSeamlessTravelPlayer(NewController);
 	CheckAndStartLobbyCountdown();
+	UE_LOG(LogTemp, Warning, TEXT("ADS_LobbyGameMode::InitSeamlessTravelPlayer for %s"), *NewController->GetName());
 }
 
 void ADS_LobbyGameMode::Logout(AController* Exiting)
@@ -33,6 +35,7 @@ void ADS_LobbyGameMode::Logout(AController* Exiting)
 	Super::Logout(Exiting);
 	CheckAndStopLobbyCountdown();
 	RemovePlayerSession(Exiting);
+	UE_LOG(LogTemp, Warning, TEXT("ADS_LobbyGameMode::Logout for %s"), *Exiting->GetName());
 }
 
 void ADS_LobbyGameMode::PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId,
@@ -44,6 +47,7 @@ void ADS_LobbyGameMode::PreLogin(const FString& Options, const FString& Address,
 	const FString Username = UGameplayStatics::ParseOption(Options, TEXT("Username"));
 	
 	TryAcceptPlayerSession(PlayerSessionId, Username, ErrorMessage);
+	UE_LOG(LogTemp, Warning, TEXT("ADS_LobbyGameMode::PreLogin - PlayerSessionId: %s, Username: %s"), *PlayerSessionId, *Username);
 }
 
 FString ADS_LobbyGameMode::InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId,
@@ -59,7 +63,7 @@ FString ADS_LobbyGameMode::InitNewPlayer(APlayerController* NewPlayerController,
 		DSPlayerController->PlayerSessionId = PlayerSessionId;
 		DSPlayerController->Username = Username;
 	}
-	
+	UE_LOG(LogTemp, Warning, TEXT("ADS_LobbyGameMode::InitNewPlayer - PlayerSessionId: %s, Username: %s"), *PlayerSessionId, *Username);
 	return InitializedString;
 }
 
@@ -141,6 +145,7 @@ void ADS_LobbyGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 	
 	if (Type == ECountdownTimerType::LobbyCountdown)
 	{
+		StopCountdownTimer(LobbyCountdownTimer);
 		LobbyStatus = ELobbyStatus::SeamlessTravelling;
 		TrySeamlessTravel(DestinationMap);
 	}
@@ -160,8 +165,6 @@ void ADS_LobbyGameMode::InitGameLift()
 	}
 #endif
 }
-
-
 
 #if defined(WITH_GAMELIFT) && WITH_GAMELIFT
 void ADS_LobbyGameMode::SetServerParameters(FServerParameters& OutServerParameters)
@@ -202,5 +205,4 @@ void ADS_LobbyGameMode::SetServerParameters(FServerParameters& OutServerParamete
 		OutServerParameters.m_processId = TCHAR_TO_UTF8(*PIDString);
 	}
 }
-
 #endif
