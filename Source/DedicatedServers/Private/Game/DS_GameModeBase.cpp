@@ -1,7 +1,9 @@
 ﻿#include "Game/DS_GameModeBase.h"
-#include "GameLiftServerSDK.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/DSPlayerController.h"
+#if defined(WITH_GAMELIFT) && WITH_GAMELIFT
+#include "GameLiftServerSDK.h"
+#endif
 
 void ADS_GameModeBase::StartCountdownTimer(FCountdownTimerHandle& CountdownTimerHandle)
 {
