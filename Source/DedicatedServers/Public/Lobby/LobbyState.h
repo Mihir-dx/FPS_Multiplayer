@@ -5,6 +5,18 @@
 #include "GameFramework/Info.h"
 #include "LobbyState.generated.h"
 
+USTRUCT()
+struct FLobbyPlayerInfoDelta
+{
+	GENERATED_BODY()
+	
+	UPROPERTY()
+	TArray<FLobbyPlayerInfo> AddedPlayers{};
+	
+	UPROPERTY()
+	TArray<FLobbyPlayerInfo> RemovedPlayers{};
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerInfoChanged, const FLobbyPlayerInfo&, PlayerInfo);
 
 UCLASS()
@@ -35,4 +47,8 @@ private:
 		
 	UPROPERTY(ReplicatedUsing=OnRep_LobbyPlayerInfo)
 	FLobbyPlayerInfoArray PlayerInfoArray;
+	
+	FLobbyPlayerInfoArray LastPlayerInfoArray;
+	
+	FLobbyPlayerInfoDelta ComputePlayerInfoDelta(const TArray<FLobbyPlayerInfo>& OldArray, const TArray<FLobbyPlayerInfo>& NewArray);
 };
