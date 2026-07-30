@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "LobbyPlayerInfo.generated.h"
 #include "Net/Serialization/FastArraySerializer.h"
+#include "LobbyPlayerInfo.generated.h"
 
 USTRUCT(BlueprintType)
 struct FLobbyPlayerInfo : public FFastArraySerializerItem
