@@ -1,7 +1,9 @@
 ﻿#include "Game/DS_LobbyGameMode.h"
 #include "Game/DS_GameInstanceSubsystem.h"
 #include "DedicatedServers/DedicatedServers.h"
+#include "Game/DS_GameState.h"
 #include "Kismet/GameplayStatics.h"
+#include "Lobby/LobbyState.h"
 #include "Player/DSPlayerController.h"
 #if defined(WITH_GAMELIFT) && WITH_GAMELIFT
 #include "GameLiftServerSDK.h"
@@ -20,14 +22,15 @@ void ADS_LobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 	CheckAndStartLobbyCountdown();
-	UE_LOG(LogTemp, Warning, TEXT("ADS_LobbyGameMode::PostLogin for %s"), *NewPlayer->GetName());
 }
 
 void ADS_LobbyGameMode::InitSeamlessTravelPlayer(AController* NewController)
 {
 	Super::InitSeamlessTravelPlayer(NewController);
 	CheckAndStartLobbyCountdown();
-	UE_LOG(LogTemp, Warning, TEXT("ADS_LobbyGameMode::InitSeamlessTravelPlayer for %s"), *NewController->GetName());
+	
+	if (LobbyStatus != ELobbyStatus::SeamlessTravelling)
+		AddPlayerInfoToLobbyState(NewController);
 }
 
 void ADS_LobbyGameMode::Logout(AController* Exiting)
@@ -35,7 +38,9 @@ void ADS_LobbyGameMode::Logout(AController* Exiting)
 	Super::Logout(Exiting);
 	CheckAndStopLobbyCountdown();
 	RemovePlayerSession(Exiting);
-	UE_LOG(LogTemp, Warning, TEXT("ADS_LobbyGameMode::Logout for %s"), *Exiting->GetName());
+	
+	if (LobbyStatus != ELobbyStatus::SeamlessTravelling)
+		RemovePlayerInfoFromLobbyState(Exiting);
 }
 
 void ADS_LobbyGameMode::PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId,
@@ -47,7 +52,6 @@ void ADS_LobbyGameMode::PreLogin(const FString& Options, const FString& Address,
 	const FString Username = UGameplayStatics::ParseOption(Options, TEXT("Username"));
 	
 	TryAcceptPlayerSession(PlayerSessionId, Username, ErrorMessage);
-	UE_LOG(LogTemp, Warning, TEXT("ADS_LobbyGameMode::PreLogin - PlayerSessionId: %s, Username: %s"), *PlayerSessionId, *Username);
 }
 
 FString ADS_LobbyGameMode::InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId,
@@ -63,7 +67,10 @@ FString ADS_LobbyGameMode::InitNewPlayer(APlayerController* NewPlayerController,
 		DSPlayerController->PlayerSessionId = PlayerSessionId;
 		DSPlayerController->Username = Username;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("ADS_LobbyGameMode::InitNewPlayer - PlayerSessionId: %s, Username: %s"), *PlayerSessionId, *Username);
+	
+	if (LobbyStatus != ELobbyStatus::SeamlessTravelling)
+		AddPlayerInfoToLobbyState(NewPlayerController);
+	
 	return InitializedString;
 }
 
@@ -111,6 +118,27 @@ void ADS_LobbyGameMode::TryAcceptPlayerSession(const FString& PlayerSessionId, c
 	}
 	
 #endif
+}
+
+void ADS_LobbyGameMode::AddPlayerInfoToLobbyState(AController* Player) const
+{
+	ADSPlayerController* DSPlayerController = Cast<ADSPlayerController>(Player);
+	ADS_GameState* DSGameState = GetGameState<ADS_GameState>();
+	if (IsValid(DSGameState) && IsValid(DSGameState->LobbyState) && IsValid(DSPlayerController))
+	{
+		FLobbyPlayerInfo PlayerInfo(DSPlayerController->Username);
+		DSGameState->LobbyState->AddPlayerInfo(PlayerInfo);
+	}
+}
+
+void ADS_LobbyGameMode::RemovePlayerInfoFromLobbyState(AController* Player) const
+{
+	ADSPlayerController* DSPlayerController = Cast<ADSPlayerController>(Player);
+	ADS_GameState* DSGameState = GetGameState<ADS_GameState>();
+	if (IsValid(DSGameState) && IsValid(DSGameState->LobbyState) && IsValid(DSPlayerController))
+	{
+		DSGameState->LobbyState->RemovePlayerInfo(DSPlayerController->Username);
+	}
 }
 
 void ADS_LobbyGameMode::CheckAndStartLobbyCountdown()
