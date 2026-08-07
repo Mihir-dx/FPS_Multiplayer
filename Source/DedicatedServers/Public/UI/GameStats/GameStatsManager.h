@@ -12,6 +12,6 @@ class DEDICATEDSERVERS_API UGameStatsManager : public UHTTPRequestManager
 {
 	GENERATED_BODY()
 	
-private:
+public:
 	void RecordMatchStats(const FDSRecordMatchStatsInput& RecordMatchStatsInput);
 };
