@@ -18,6 +18,9 @@ public:
 	void RecordMatchStats(const FDSRecordMatchStatsInput& RecordMatchStatsInput);
 	void RetrieveMatchStats();
 	
+	UPROPERTY(BlueprintAssignable)
+	FAPIStatusMessage RetrieveMatchStatusMessage;
+	
 	UPROPERTY()
 	FOnRetrieveMatchStatsResponseReceived OnRetrieveMatchStatsResponseReceived;
 	
