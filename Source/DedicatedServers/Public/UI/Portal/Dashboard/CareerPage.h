@@ -35,7 +35,7 @@ public:
 	TSubclassOf<UCareerAchievement> CareerAchievementClass;
 	
 	UFUNCTION()
-	void OnRetrieveMatchStats(const FDSRetrieveMatchStatsResponse& RetrieveMatchStatsResponse);
+	virtual void OnRetrieveMatchStats(const FDSRetrieveMatchStatsResponse& RetrieveMatchStatsResponse);
 	
 	UFUNCTION()
 	void SetStatusMessage(const FString& StatusMessage, bool bShouldResetWidgets);
