@@ -31,9 +31,6 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UScrollBox> ScrollBox_Achievements;
 	
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UCareerAchievement> CareerAchievementClass;
-	
 	UFUNCTION()
 	virtual void OnRetrieveMatchStats(const FDSRetrieveMatchStatsResponse& RetrieveMatchStatsResponse);
 	
