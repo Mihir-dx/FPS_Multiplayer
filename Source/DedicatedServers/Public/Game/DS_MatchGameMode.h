@@ -5,6 +5,8 @@
 #include "DS_MatchGameMode.generated.h"
 
 
+class UGameStatsManager;
+
 UCLASS()
 class DEDICATEDSERVERS_API ADS_MatchGameMode : public ADS_GameModeBase
 {
@@ -19,11 +21,19 @@ public:
 	virtual void InitSeamlessTravelPlayer(AController* NewController) override;
 	
 	UPROPERTY()
-	EMatchStatus MatchStatus;
+	EMatchStatus MatchStatus;	
+	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameStatsManager> GameStatsManagerClass;
 	
 protected:
 	
 	virtual void OnCountdownTimerFinished(ECountdownTimerType Type) override;
+	virtual void BeginPlay() override;
+	void SetClientInputEnabled(bool bEnabled);
+	void EndMatchForPlayerStates();
+	virtual void OnMatchEnded();
+	void UpdateLeaderboard(const TArray<FString>& LeaderboardNames);
 	
 	UPROPERTY(EditDefaultsOnly)
 	FCountdownTimerHandle PreMatchTimer;
@@ -37,5 +47,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSoftObjectPtr<UWorld> LobbyMap;
 	
-	void SetClientInputEnabled(bool bEnabled);
+	UFUNCTION()
+	void OnLeaderboardUpdated();
+	
+private:
+	
+	UPROPERTY()
+	TObjectPtr<UGameStatsManager> GameStatsManager;
 };
