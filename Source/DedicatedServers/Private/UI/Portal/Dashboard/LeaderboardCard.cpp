@@ -1,0 +1,9 @@
+﻿#include "UI/Portal/Dashboard/LeaderboardCard.h"
+#include "Components/TextBlock.h"
+
+void ULeaderboardCard::SetPlayerInfo(const FString& Username, int32 Wins, int32 Place) const
+{
+	TextBlock_Username->SetText(FText::FromString(Username));
+	TextBlock_Wins->SetText(FText::AsNumber(Wins));
+	TextBlock_Place->SetText(FText::AsNumber(Place));
+}
