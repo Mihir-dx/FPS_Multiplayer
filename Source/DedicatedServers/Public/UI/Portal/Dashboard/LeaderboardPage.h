@@ -16,7 +16,11 @@ class DEDICATEDSERVERS_API ULeaderboardPage : public UUserWidget
 	
 public:
 	 
+	UFUNCTION()
 	void PopulateLeaderboard(TArray<FDSLeaderboardItem>& Leaderboard);
+	
+	UFUNCTION()
+	void SetStatusMessage(const FString& StatusMessage, bool bShouldResetWidgets);
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UScrollBox> ScrollBox_Leaderboard;
