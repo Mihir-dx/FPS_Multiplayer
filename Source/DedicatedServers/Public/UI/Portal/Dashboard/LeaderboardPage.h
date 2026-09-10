@@ -28,6 +28,7 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UTextBlock> TextBlock_StatusMessage;
 	
+	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<ULeaderboardCard> LeaderboardCardClass;
 	
 private:
