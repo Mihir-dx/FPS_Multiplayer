@@ -16,7 +16,7 @@ class DEDICATEDSERVERS_API ULeaderboardPage : public UUserWidget
 	
 public:
 	 
-	void PopulateLeaderboard(TArray<FDSLeaderboardItem> Leaderboard);
+	void PopulateLeaderboard(TArray<FDSLeaderboardItem>& Leaderboard);
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UScrollBox> ScrollBox_Leaderboard;
@@ -28,5 +28,5 @@ public:
 	
 private:
 	
-	void CalculateLeaderboardPlaces(TArray<FDSLeaderboardItem> OutLeaderboard);
+	void CalculateLeaderboardPlaces(TArray<FDSLeaderboardItem>& OutLeaderboard);
 };
