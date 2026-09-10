@@ -1,5 +1,6 @@
 #include "UI/Portal/Dashboard/LeaderboardPage.h"
 #include "Components/ScrollBox.h"
+#include "Components/TextBlock.h"
 #include "UI/HTTP/HTTPRequestTypes.h"
 #include "UI/Portal/Dashboard/LeaderboardCard.h"
 
@@ -39,4 +40,9 @@ void ULeaderboardPage::CalculateLeaderboardPlaces(TArray<FDSLeaderboardItem>& Ou
 		// Every player gets assigned the CurrentRank, whether they tied or not.
 		OutLeaderboard[i].place = CurrentRank;
 	}
+}
+
+void ULeaderboardPage::SetStatusMessage(const FString& StatusMessage, bool bShouldResetWidgets)
+{
+	TextBlock_StatusMessage->SetText(FText::FromString(StatusMessage));
 }
