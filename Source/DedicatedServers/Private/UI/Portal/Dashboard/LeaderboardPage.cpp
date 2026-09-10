@@ -3,7 +3,7 @@
 #include "UI/HTTP/HTTPRequestTypes.h"
 #include "UI/Portal/Dashboard/LeaderboardCard.h"
 
-void ULeaderboardPage::PopulateLeaderboard(TArray<FDSLeaderboardItem> Leaderboard)
+void ULeaderboardPage::PopulateLeaderboard(TArray<FDSLeaderboardItem>& Leaderboard)
 {
 	ScrollBox_Leaderboard->ClearChildren();
 	CalculateLeaderboardPlaces(Leaderboard);
@@ -19,28 +19,24 @@ void ULeaderboardPage::PopulateLeaderboard(TArray<FDSLeaderboardItem> Leaderboar
 	}
 }
 
-void ULeaderboardPage::CalculateLeaderboardPlaces(TArray<FDSLeaderboardItem> OutLeaderboard)
+void ULeaderboardPage::CalculateLeaderboardPlaces(TArray<FDSLeaderboardItem>& OutLeaderboard)
 {
+	// Sort Descending (O(N log N))
 	OutLeaderboard.Sort([](const FDSLeaderboardItem& A, const FDSLeaderboardItem& B)
 	{
 		return A.matchWins > B.matchWins;	//Player with the most Match wins A,Player B with the second most Match wins and so on.
 	});
 	
-	// Assign place based on wins, accounting for ties.
+	// Dense ranking (1,2,2,3)
 	int32 CurrentRank = 1;
 	for (int32 i = 0; i < OutLeaderboard.Num(); ++i)
 	{
-		if (i > 0 && OutLeaderboard[i].matchWins == OutLeaderboard[i -1].matchWins)
+		// If not first time and have fewer wins than person above them then drop the rank.
+		if (i > 0 && OutLeaderboard[i].matchWins < OutLeaderboard[i -1].matchWins)
 		{
-			// If wins are same as previous, then they are on the same place.
-			OutLeaderboard[i].place = OutLeaderboard[i - 1].place;
+			CurrentRank++;
 		}
-		else
-		{
-			// If wins are different, assign current rank as the place.
-			OutLeaderboard[i].place = CurrentRank;
-		}
-		// Increment rank for the next item.
-		CurrentRank++;
+		// Every player gets assigned the CurrentRank, whether they tied or not.
+		OutLeaderboard[i].place = CurrentRank;
 	}
 }
