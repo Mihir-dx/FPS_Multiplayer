@@ -44,6 +44,9 @@ public:
 	FString LastUsername;
 	
 private:
+	bool bRefreshInFlight = false;
+	FHttpRequestPtr RefreshRequest;
+	uint64 RefreshAuthenticationGeneration = 0;
 	
 	void SignUp_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void Confirm_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
