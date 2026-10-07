@@ -34,9 +34,10 @@ void UPortalManager::SignIn(const FString& Username, const FString& Password)
 
 void UPortalManager::SignIn_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-    if (!bWasSuccessful)
+    if (!bWasSuccessful || !Response.IsValid())
     {
         SignInStatusMessageDelegate.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
+        return;
     }
     
     TSharedPtr<FJsonObject> JsonObject;
@@ -57,6 +58,11 @@ void UPortalManager::SignIn_Response(FHttpRequestPtr Request, FHttpResponsePtr R
         UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
         if (IsValid(LocalPlayerSubsystem))
         {
+            if (InitiateAuthResponse.AuthenticationResult.IdToken.IsEmpty())
+            {
+                SignInStatusMessageDelegate.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
+                return;
+            }
             LocalPlayerSubsystem->InitializeToken(InitiateAuthResponse.AuthenticationResult, this);
             LocalPlayerSubsystem->Username = LastUsername;
             LocalPlayerSubsystem->Email = InitiateAuthResponse.email;
@@ -180,8 +186,14 @@ void UPortalManager::QuitGame()
 
 void UPortalManager::RefreshTokens(const FString& RefreshToken)
 {
+    if (bRefreshInFlight || RefreshToken.IsEmpty()) return;
+    const UDSLocalPlayerSubsystem* Local = GetDSLocalPlayerSubsystem();
+    if (!Local) return;
+    RefreshAuthenticationGeneration = Local->GetAuthenticationGeneration();
+    bRefreshInFlight = true;
     check(APIData)
     TSharedPtr<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+    RefreshRequest = Request;
     Request->OnProcessRequestComplete().BindUObject(this, &UPortalManager::RefreshToken_Response);
     const FString APIUrl = APIData->GetAPIEndpoint(DedicatedServersTags::PortalAPI::SignIn);
     Request->SetURL(APIUrl);
@@ -193,13 +205,17 @@ void UPortalManager::RefreshTokens(const FString& RefreshToken)
     };
     const FString Content = SerializeJsonContent(Params);
     Request->SetContentAsString(Content);
-    Request->ProcessRequest();
+    if (!Request->ProcessRequest()) bRefreshInFlight = false;
 }
 
 void UPortalManager::RefreshToken_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-    
-    if (!bWasSuccessful) return;
+    if (Request != RefreshRequest) return;
+    RefreshRequest.Reset();
+    bRefreshInFlight = false;
+    const UDSLocalPlayerSubsystem* CurrentAccount = GetDSLocalPlayerSubsystem();
+    if (!CurrentAccount || CurrentAccount->GetAuthenticationGeneration() != RefreshAuthenticationGeneration) return;
+    if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200) return;
     
     TSharedPtr<FJsonObject> JsonObject;
     TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
@@ -210,6 +226,7 @@ void UPortalManager::RefreshToken_Response(FHttpRequestPtr Request, FHttpRespons
         
         FDSInitiateAuthResponse InitiateAuthResponse;
         FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &InitiateAuthResponse);
+        if (InitiateAuthResponse.AuthenticationResult.IdToken.IsEmpty() || InitiateAuthResponse.AuthenticationResult.AccessToken.IsEmpty()) return;
         
         UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
         if (IsValid(LocalPlayerSubsystem))
@@ -242,7 +259,7 @@ void UPortalManager::SignOut(const FString& AccessToken)
 
 void UPortalManager::SignOut_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {    
-    if (!bWasSuccessful)
+    if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
     { return; }
     
     TSharedPtr<FJsonObject> JsonObject;
@@ -258,9 +275,7 @@ void UPortalManager::SignOut_Response(FHttpRequestPtr Request, FHttpResponsePtr 
     
     if (UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem(); IsValid(LocalPlayerSubsystem))
     {
-        LocalPlayerSubsystem->Username = "";
-        LocalPlayerSubsystem->Password = "";
-        LocalPlayerSubsystem->Email = "";
+        LocalPlayerSubsystem->ClearSession();
     }
     
     APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld());
