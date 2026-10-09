@@ -4,8 +4,15 @@
 #include "Player/DSLocalPlayerSubsystem.h"
 #include "UI/Portal/Interfaces/PortalManagement.h"
 
+void UDSLocalPlayerSubsystem::Deinitialize()
+{
+	ClearSession();
+	Super::Deinitialize();
+}
+
 void UDSLocalPlayerSubsystem::InitializeToken(const FDSAuthenticationResult& AuthResult, TScriptInterface<IPortalManagement> PortalManagement)
 {
+	++AuthenticationGeneration;
 	AuthenticationResult = AuthResult;
 	PortalManagerInterface = PortalManagement;
 	SetRefreshTokenTimer();
@@ -17,9 +24,27 @@ void UDSLocalPlayerSubsystem::SetRefreshTokenTimer()
 	if (IsValid(World) && IsValid(PortalManagerInterface.GetObject()))
 	{
 		FTimerDelegate RefreshDelegate;
-		RefreshDelegate.BindLambda([this](){PortalManagerInterface->RefreshTokens(AuthenticationResult.RefreshToken);});
+		RefreshDelegate.BindWeakLambda(this, [this]() { RequestTokenRefresh(); });
 		World->GetTimerManager().SetTimer(RefreshTimer, RefreshDelegate, TokenRefreshInterval, false);
 	}
+}
+
+bool UDSLocalPlayerSubsystem::RequestTokenRefresh()
+{
+	if (!IsValid(PortalManagerInterface.GetObject()) || AuthenticationResult.RefreshToken.IsEmpty()) return false;
+	PortalManagerInterface->RefreshTokens(AuthenticationResult.RefreshToken);
+	return true;
+}
+
+void UDSLocalPlayerSubsystem::ClearSession()
+{
+	++AuthenticationGeneration;
+	if (GetWorld()) GetWorld()->GetTimerManager().ClearTimer(RefreshTimer);
+	AuthenticationResult = FDSAuthenticationResult();
+	PortalManagerInterface = nullptr;
+	Username.Reset();
+	Email.Reset();
+	Password.Reset();
 }
 
 void UDSLocalPlayerSubsystem::UpdateTokens(const FString& AccessToken, const FString& IdToken)
