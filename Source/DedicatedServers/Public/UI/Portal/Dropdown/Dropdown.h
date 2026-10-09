@@ -45,6 +45,10 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FSlateBrush Triangle_Down;
+
+	// New menu copies can keep their editable UMG hover/pressed brushes.
+	UPROPERTY(EditDefaultsOnly, Category = "Appearance")
+	bool bUseDesignerButtonStyle = false;
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UImage> Image_Triangle;
