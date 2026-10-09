@@ -16,16 +16,21 @@ class DEDICATEDSERVERS_API UDSLocalPlayerSubsystem : public ULocalPlayerSubsyste
 	
 public:
 	
+	virtual void Deinitialize() override;
 	void InitializeToken(const FDSAuthenticationResult& AuthResult, TScriptInterface<IPortalManagement> PortalManagement);
 	void SetRefreshTokenTimer();
 	void UpdateTokens(const FString& AccessToken, const FString& IdToken);
 	FDSAuthenticationResult GetAuthResult() const;
+	bool RequestTokenRefresh();
+	void ClearSession();
+	uint64 GetAuthenticationGeneration() const { return AuthenticationGeneration; }
 	
 	FString Username{};
 	FString Email{};
 	FString Password{};
 	
 private:
+	uint64 AuthenticationGeneration = 0;
 	
 	UPROPERTY()
 	FDSAuthenticationResult AuthenticationResult;
